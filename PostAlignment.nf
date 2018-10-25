@@ -17,9 +17,13 @@
 
 
 params.help          		 = null
-params.config         		= null
-params.cpu            		= 28
-params.mem           		 = 32
+params.config         		 = null
+params.cpu            		 = 10
+params.mem           		 = 20
+params.refalt                   = 'ref.fa.alt'
+params.output_folder            = "."
+params.js                       = "k8"
+params.postaltjs                = "bwa-postalt.js"
 
 log.info ""
 log.info "----------------------------------------------------------------"
@@ -40,7 +44,6 @@ if (params.help) {
     log.info "nextflow run PostAlign.nf --samtools /path/to/samtools --sambamba /path/to/sambamba --bwait /path/to/bwakit --input_folder path/to/input   --output_folder /path/to/output"
     log.info ""
     log.info "Mandatory arguments:"
-    log.info "--samtools              PATH               samtools installation dir"
     log.info "--sambamba              PATH               sambamba installation dir"
     log.info "--bwakit                PATH               bwakit installation dir"
     log.info "--input_folder         FOLDER               Folder containing bam files"
@@ -57,22 +60,36 @@ if (params.help) {
     exit 1
 } 
 
+//load bam files
 all_bams = Channel.fromPath( params.input_folder+'/*.bam' ).ifEmpty{error "Cannot find any bam file in: ${params.input_folder}"}
 
+//load reference
+refalt = file(params.refalt)
+
+//load postalt javascript
+postaltjs = file(params.postaltjs)
+
 process post_alignment {
- cpus params.cpu
+  cpus params.cpu
+  memory params.mem+'GB'
+  tag { file_tag }
+
   input:
-  file i from all_bams
+  file bam from all_bams
+  file refalt
+  file postaltjs
 
   output:
-  publishDir'${params.output_folder}', mode: 'copy', pattern: '{*.HEAD,*.pa.bam}'
+  publishDir'${params.output_folder}', mode: 'move'
 
   shell:
+  file_tag = bam.baseName
+  sort_threads = params.cpu -3
+  sort_mem = params.mem.intdiv(4)
   '''
-!{params.samtools} view -h !{i} | \
-!{params.bwakit}/bin/k8 !{params.bwakit}/bin/bwa-postalt.js !{params.bwakit}/resource-GRCh38/hs38DH.fa.alt | \
-!{params.sambamba} view -S -f bam -l 0 /dev/stdin | \
-!{params.sambamba} sort -t 8 -m 6G --tmpdir=!{params.output_folder} -o !{params.output_folder}/!{i.baseName}_pa.bam /dev/stdin
-
+  sambamba view -h !{bam} | \
+  k8 !{postaltjs} !{refalt} | \
+  sambamba view -S -f bam -l 0 /dev/stdin | \
+  sambamba sort -t !{sort_threads} -m !{sort_mem}G --tmpdir=!{file_tag}_tmp -o !{file_tag}_postalt.bam /dev/stdin
   '''
 }
