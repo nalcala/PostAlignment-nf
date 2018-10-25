@@ -17,12 +17,10 @@
 
 
 params.help          		 = null
-params.config         		 = null
 params.cpu            		 = 10
 params.mem           		 = 20
 params.refalt                   = 'ref.fa.alt'
 params.output_folder            = "."
-params.js                       = "k8"
 params.postaltjs                = "bwa-postalt.js"
 
 log.info ""
@@ -39,20 +37,19 @@ if (params.help) {
     log.info "                     USAGE                              "
     log.info "--------------------------------------------------------"
     log.info ""
-    log.info "-------------------QC-------------------------------"
+    log.info "-------------------Post alignment alternative contigs----------------------------"
     log.info "" 
-    log.info "nextflow run PostAlign.nf --samtools /path/to/samtools --sambamba /path/to/sambamba --bwait /path/to/bwakit --input_folder path/to/input   --output_folder /path/to/output"
+    log.info "nextflow run PostAlign.nf --refalt /path/to/bwakit --input_folder path/to/input   --output_folder /path/to/output"
     log.info ""
     log.info "Mandatory arguments:"
-    log.info "--sambamba              PATH               sambamba installation dir"
-    log.info "--bwakit                PATH               bwakit installation dir"
-    log.info "--input_folder         FOLDER               Folder containing bam files"
+    log.info "--input_folder         FOLDER              Folder containing bam files"
     log.info "--output_folder         path               Path to output"
+    log.info "--postaltjs             path               Path to bwakit bwa-postalt.js javascript"
+    log.info "--refalt                path               Path alternative reference fasta file (from bwakit)"
     log.info ""
     log.info "Optional arguments:"
-    log.info "--cpu                  INTEGER              Number of cpu to use (default=28)"
-    log.info "--config               FILE                 Use custom configuration file"
-    log.info "--mem                  INTEGER              Size of memory used. Default 32Gb"
+    log.info "--cpu                  INTEGER              Number of cpu to use (default=10)"
+    log.info "--mem                  INTEGER              Size of memory used  (default=20Gb)"
     log.info ""
     log.info "Flags:"
     log.info "--help                                      Display this message"
