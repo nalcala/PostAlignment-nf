@@ -77,7 +77,9 @@ process post_alignment {
   file postaltjs
 
   output:
-  publishDir'${params.output_folder}', mode: 'move'
+  file("*_postalt.bam*")
+  
+  publishDir params.output_folder, mode: 'move'
 
   shell:
   file_tag = bam.baseName
